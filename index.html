@@ -537,15 +537,13 @@ function grade(target,alts){
 }
 function gradeName(sc){return sc>=.85?["Clear","g-ok"]:sc>=.5?["Almost","g-mid"]:["Not yet","g-low"]}
 function micOn(){return !!SR&&!micBlocked&&S.mic!==false}
-function hearWord(w){
-  const t=w.replace(/[?!.,«»"]/g,"");
-  if(TTS){try{pickVoice();speechSynthesis.cancel();clip.pause();const u=new SpeechSynthesisUtterance(t);u.lang=frVoice?frVoice.lang:"fr-CA";if(frVoice)u.voice=frVoice;u.rate=.7;speechSynthesis.speak(u);return}catch(e){}}
-  speak(Q[qi].say,.6);
-}
+function hearWord(w){speak(Q[qi].say,.6)}
+
 let srInst=null,srFresh=true,srGood=0,srRun=0,srTimer=null;
 function stopAudioForMic(){
   /* iPhone shares one audio session between playback and the mic: fully release the clip first. */
-  try{clip.pause();clip.removeAttribute("src");clip.load()}catch(e){}
+  stopPlayback();
+  try{clip.removeAttribute("src");clip.load()}catch(e){}
   if(TTS)try{speechSynthesis.cancel()}catch(e){}
 }
 function endListening(msg,fresh){
@@ -560,7 +558,8 @@ function startListening(){
   rec.lang="fr-CA";rec.interimResults=true;rec.maxAlternatives=5;rec.continuous=false;
   let finals=null,errored=false,started=false;liveText="";micMsg="";listening=true;renderCard();
   const mine=()=>run===srRun;
-  rec.onstart=rec.onaudiostart=()=>{if(mine())started=true};
+  let ev="";
+  rec.onstart=()=>{if(mine()){started=true;ev+="s"}};rec.onaudiostart=()=>{if(mine()){started=true;ev+="a"}};rec.onspeechstart=()=>{if(mine())ev+="p"};
   rec.onresult=ev=>{
     if(!mine())return;
     const r=ev.results[ev.results.length-1];
@@ -584,7 +583,7 @@ function startListening(){
   /* Watchdog: iPhone sometimes never starts or never ends a recognition. */
   clearTimeout(srTimer);
   srTimer=setTimeout(()=>{if(mine()&&listening&&!started){try{rec.abort()}catch(e){}endListening("The microphone didn't start. Tap and try again.",true)}},4000);
-  setTimeout(()=>{if(mine()&&listening){try{rec.stop()}catch(e){}setTimeout(()=>{if(mine()&&listening){try{rec.abort()}catch(e){}if(liveText){listening=false;srFresh=true;srGood++;const g=grade(Q[qi].say,[liveText]);repRes[reps]=g;countRep()}else endListening("I didn't catch that. Tap and try again.",true)}},2000)}},12000);
+  setTimeout(()=>{if(mine()&&listening){try{rec.stop()}catch(e){}setTimeout(()=>{if(mine()&&listening){try{rec.abort()}catch(e){}if(liveText){listening=false;srFresh=true;srGood++;const g=grade(Q[qi].say,[liveText]);repRes[reps]=g;countRep()}else endListening("I didn't catch that ("+(ev||"no events")+"). Tap and try again.",true)}},2000)}},12000);
   try{rec.start()}catch(e){endListening("Couldn't start the microphone ("+(e&&e.name||"error")+"). Tap and try again.",true)}
 }
 let micMsg="";
@@ -610,17 +609,34 @@ else{$("novoice").hidden=false}
 let claudeTTS=null;
 try{window.claude&&window.claude.use&&window.claude.use("tts").then(t=>{claudeTTS=t}).catch(()=>{})}catch(e){}
 const clip=new Audio();clip.preload="auto";
+/* Clips play through the Web Audio API: on iPhone, <audio> playback stops speech recognition from answering after its first result. */
+const AC=window.AudioContext||window.webkitAudioContext||null;
+let actx=null,curSrc=null,playTok=0;const bufs=new Map();
+function getCtx(){if(!AC)return null;if(!actx){try{actx=new AC()}catch(e){return null}}if(actx.state!=="running"){try{actx.resume()}catch(e){}}return actx}
+function loadBuf(url){
+  if(bufs.has(url))return bufs.get(url);
+  const pr=fetch(url).then(r=>{if(!r.ok)throw new Error("http "+r.status);return r.arrayBuffer()}).then(ab=>new Promise((res,rej)=>{const c=getCtx();if(!c)return rej(new Error("no audio"));const q=c.decodeAudioData(ab,res,rej);if(q&&q.catch)q.catch(rej)}));
+  pr.catch(()=>bufs.delete(url));bufs.set(url,pr);return pr;
+}
+function stopPlayback(){playTok++;if(curSrc){try{curSrc.onended=null;curSrc.stop()}catch(e){}curSrc=null}try{clip.pause()}catch(e){}}
+function playUrl(url,onended,onfail){
+  stopPlayback();const tok=playTok;const ctx=getCtx();
+  if(!ctx){clip.src=url;clip.onended=onended||null;clip.play().catch(()=>onfail&&onfail());return}
+  loadBuf(url).then(buf=>{
+    if(tok!==playTok)return;
+    const src=ctx.createBufferSource();src.buffer=buf;src.connect(ctx.destination);
+    src.onended=()=>{if(tok===playTok){curSrc=null;onended&&onended()}};
+    src.start(0);curSrc=src;showAudioNote(false);
+  }).catch(()=>{if(tok===playTok&&onfail)onfail()});
+}
+function clipUrl(i,slow){const n=String(i+1).padStart(3,"0");return slow?"audio/slow/"+n+".mp3":"audio/"+n+".mp3"}
 function speak(text,rate){
   const p=P.find(x=>x.say===text);
   if(p){
     try{
       if("speechSynthesis" in window)speechSynthesis.cancel();
-      clip.pause();
-      clip.src="audio/"+String(p.i+1).padStart(3,"0")+".mp3";
-      const r=rate<.8?.7:1;clip.defaultPlaybackRate=r;clip.playbackRate=r;
-      clip.preservesPitch=true;clip.webkitPreservesPitch=true;
-      clip.onplaying=()=>{clip.playbackRate=r};clip.onended=null;storyAll=false;
-      clip.play().then(()=>showAudioNote(false)).catch(e=>{if(!e||e.name!=="AbortError")speakFallback(text,rate)});
+      storyAll=false;
+      playUrl(clipUrl(p.i,rate<.8),null,()=>speakFallback(text,rate));
       return;
     }catch(e){}
   }
@@ -741,7 +757,7 @@ function feedback(g){
   const gn=gradeName(g.score);
   return`<div class="fb"><span class="grade ${gn[1]}">${gn[0]}</span>
     <div class="words" lang="fr-CA">${g.words.map(x=>x.ok?`<span class="w-ok">${esc(x.w)}</span>`:`<button class="w-miss" data-word="${esc(x.w)}" aria-label="Hear ${esc(x.w)}">${esc(x.w)}</button>`).join("")}</div>
-    ${g.words.some(x=>!x.ok)?`<p class="heard">Tap a red word to hear it, then try again.</p>`:""}
+    ${g.words.some(x=>!x.ok)?`<p class="heard">Tap a red word to hear the phrase slowly, then try again.</p>`:""}
     <p class="heard">Heard: “${esc(g.heard)}”</p>
     <button id="fbslow" class="small">Hear the whole phrase slowly</button></div>`;
 }
@@ -802,18 +818,16 @@ function markLine(k){storyLine=k;document.querySelectorAll("#storycard .line").f
 function playFrom(k,all){
   const s=STORIES[si];
   if("speechSynthesis" in window)speechSynthesis.cancel();
-  clip.pause();storyAll=all;
-  clip.onplaying=null;clip.defaultPlaybackRate=1;clip.playbackRate=1;
-  clip.src=`audio/stories/s${si+1}-${k+1}.mp3`;
+  storyAll=all;
   markLine(k);
   $("playstory").textContent=all?"Stop":"Play story";
-  clip.onended=()=>{
+  const ended=()=>{
     if(storyAll&&k+1<s.lines.length){setTimeout(()=>{if(storyAll)playFrom(k+1,true)},350)}
     else{if(storyAll){S.st=S.st||{};S.st[si]=(S.st[si]||0)+1;save()}storyAll=false;markLine(-1);const b=$("playstory");if(b)b.textContent="Play story"}
   };
-  clip.play().then(()=>showAudioNote(false)).catch(e=>{if(!e||e.name!=="AbortError"){storyAll=false;markLine(-1)}});
+  playUrl(`audio/stories/s${si+1}-${k+1}.mp3`,ended,()=>{storyAll=false;markLine(-1);showAudioNote(true)});
 }
-function stopStory(){storyAll=false;clip.pause();clip.onended=null;markLine(-1);const b=$("playstory");if(b)b.textContent="Play story"}
+function stopStory(){storyAll=false;stopPlayback();markLine(-1);const b=$("playstory");if(b)b.textContent="Play story"}
 function closeStory(){stopStory();$("story").hidden=true;$("home").hidden=false;renderHome()}
 
 function esc(s){return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
