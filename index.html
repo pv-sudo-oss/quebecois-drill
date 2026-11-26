@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1f4fbf" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e1524" media="(prefers-color-scheme: dark)">
+<meta name="description" content="Short out-loud practice sessions and stories for 200 Québécois phrases.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Québécois">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{-webkit-text-size-adjust:100%}body{margin:0}img{max-width:100%}</style>
+<title>Québécois Speaking Drill</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Familjen+Grotesk:wght@500;700&display=swap">
+<style>
+/* Layout: one calm column; home = pick a theme + mode, drill = one big phrase card at a time. */
+:root{
+  --bg:#f3f6fb; --surface:#ffffff; --fg:#14213a; --muted:#56637d; --line:#d7deea;
+  --accent:#1f4fbf; --accent-ink:#ffffff; --accent-soft:#e3ebfb;
+  --good:#1d7a4f; --good-soft:#dff3e8; --warn:#9a5b00; --warn-soft:#fbeed6;
+  --display:"Familjen Grotesk","Helvetica Neue",Arial,sans-serif;
+  --body:"Atkinson Hyperlegible",Verdana,system-ui,sans-serif;
+  --scale:1;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0e1524; --surface:#162038; --fg:#e8eefb; --muted:#9daac4; --line:#2a3756;
+  --accent:#7ea2ff; --accent-ink:#0b1430; --accent-soft:#1f2d50;
+  --good:#6fd3a0; --good-soft:#163a2b; --warn:#f2b968; --warn-soft:#3a2c14; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1524; --surface:#162038; --fg:#e8eefb; --muted:#9daac4; --line:#2a3756;
+  --accent:#7ea2ff; --accent-ink:#0b1430; --accent-soft:#1f2d50;
+  --good:#6fd3a0; --good-soft:#163a2b; --warn:#f2b968; --warn-soft:#3a2c14; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:calc(17px * var(--scale));line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.wrap{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:1.9em} h2{font-size:1.25em} h3{font-size:1em}
+p{margin:0}
+.muted{color:var(--muted)}
+.label{font-size:.75em;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+header{display:flex;flex-direction:column;gap:6px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button{font:inherit;color:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);background:var(--surface);padding:10px 16px;min-height:44px}
+button:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+button.small{padding:6px 12px;min-height:36px;font-size:.9em}
+button:disabled{opacity:.45;cursor:default}
+section.block{display:flex;flex-direction:column;gap:12px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border-radius:999px;padding:8px 14px;display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left}
+.chip[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.chip small{color:var(--muted);font-size:.78em;font-variant-numeric:tabular-nums}
+.seg{display:flex;flex-wrap:wrap;gap:8px}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);font-weight:700}
+.modehelp{font-size:.92em}
+.stats{display:flex;gap:24px;flex-wrap:wrap;font-variant-numeric:tabular-nums}
+.stats div{display:flex;flex-direction:column}
+.stats b{font-family:var(--display);font-size:1.6em;line-height:1.1}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:18px}
+.progress{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
+.phrase{font-family:var(--display);font-size:2em;font-weight:700;line-height:1.15;overflow-wrap:anywhere;-webkit-user-select:all;user-select:all;cursor:text}
+.tip{font-size:.85em;color:var(--muted)}
+.pron{font-size:1.15em;letter-spacing:.02em}
+.meaning{font-size:1.1em}
+.prompt{font-size:1.5em;font-family:var(--display);font-weight:500}
+.hiddenbox{border:2px dashed var(--line);border-radius:12px;padding:18px;text-align:center;color:var(--muted)}
+.reps{display:flex;flex-direction:column;gap:8px}
+.rep{display:flex;align-items:center;gap:12px;justify-content:flex-start;text-align:left;width:100%}
+.rep .dot{flex:none;width:26px;height:26px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:.8em;font-weight:700}
+.rep.done{background:var(--good-soft);border-color:var(--good)}
+.rep.done .dot{background:var(--good);border-color:var(--good);color:var(--surface)}
+.rep.next{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.rate{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.rate button{display:flex;flex-direction:column;gap:2px;align-items:center;font-weight:700}
+.rate small{font-weight:400;color:var(--muted);font-size:.78em}
+.note{background:var(--warn-soft);color:var(--fg);border-radius:10px;padding:10px 14px;font-size:.9em}
+.list{display:flex;flex-direction:column;gap:6px;padding:0;margin:0;list-style:none}
+.list li{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding-block:6px}
+.list li span:last-child{color:var(--muted);text-align:right}
+.extlisten{display:inline-flex;align-items:center;min-height:44px;padding:0 4px;color:var(--accent);font-weight:700;text-underline-offset:3px}
+.lines{display:flex;flex-direction:column;gap:8px}
+.line{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:start;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--surface)}
+.line.playing{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);background:var(--accent-soft)}
+.line .who{grid-column:1/-1;font-size:.72em;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+.line.m .who{color:var(--accent)}
+.line .fr{all:unset;cursor:pointer;font-family:var(--display);font-size:1.25em;font-weight:500;line-height:1.3;min-width:0;overflow-wrap:anywhere}
+.line .fr:focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:4px}
+.line .enbtn{padding:4px 10px;min-height:32px;font-size:.8em}
+.line .en{grid-column:1/-1;color:var(--muted)}
+.gist{border-top:1px solid var(--line);padding-top:12px}
+.gist summary{cursor:pointer;font-weight:700}
+.gist p{margin-top:8px}
+.why{font-size:.92em;color:var(--muted)}
+.why summary{cursor:pointer;color:var(--fg);font-weight:700}
+.why ul{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+kbd{font-family:var(--body);border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 5px;font-size:.85em}
+@media (max-width:440px){.phrase{font-size:1.6em}.card{padding:18px}.rate{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <span class="label">200 phrases · from your Drive sheet</span>
+    <h1>Québécois Speaking Drill</h1>
+    <p class="muted">Short sessions. Say every phrase out loud three times. No microphone, no timer, no score.</p>
+  </header>
+
+  <!-- HOME -->
+  <div id="home" class="wrap" style="gap:22px">
+    <div class="stats" id="stats"></div>
+
+    <section class="block">
+      <h2>1. Pick a theme</h2>
+      <div class="chips" id="groups"></div>
+    </section>
+
+    <section class="block">
+      <h2>2. Pick a mode</h2>
+      <div class="seg" id="modes">
+        <button id="mode-shadow" data-mode="shadow" aria-pressed="true">Hear &amp; repeat</button>
+        <button id="mode-recall" data-mode="recall" aria-pressed="false">Say it from English</button>
+      </div>
+      <p class="modehelp muted" id="modehelp"></p>
+    </section>
+
+    <section class="block">
+      <h2>3. How many phrases?</h2>
+      <div class="seg" id="sizes">
+        <button id="size-5" data-size="5" aria-pressed="true">5 · about 3 min</button>
+        <button id="size-10" data-size="10" aria-pressed="false">10 · about 6 min</button>
+        <button id="size-15" data-size="15" aria-pressed="false">15 · about 10 min</button>
+      </div>
+    </section>
+
+    <div class="toolbar">
+      <button class="primary" id="start">Start session</button>
+      <button id="bigger" class="small" aria-label="Toggle larger text">Larger text</button>
+      <button id="testaudio" class="small">Test audio</button>
+      <button id="reset" class="small">Reset progress</button>
+    </div>
+    <p class="note audionote" hidden></p>
+    <p id="resetconfirm" class="note" hidden>Clear all saved progress on this device? <button class="small" id="resetyes">Yes, clear it</button> <button class="small" id="resetno">Keep it</button></p>
+    <p id="novoice" class="note" hidden>Your browser has no French voice, so the Listen buttons are off. Use the pronunciation guide instead.</p>
+
+    <section class="block" id="storiesblock">
+      <h2>Or listen to a story</h2>
+      <p class="muted">Short conversations between Julie and Marc that use the phrases. Listen for the meaning first. The English is there if you need it.</p>
+      <div class="chips" id="storylist"></div>
+    </section>
+
+    <details class="why">
+      <summary>Why it works this way</summary>
+      <ul>
+        <li><b>Saying it aloud, three times.</b> Repeating the same spoken task is one of the best-supported ways to build fluency. Try clear, then natural, then quick.</li>
+        <li><b>Ready-made chunks.</b> Fluent speakers lean on memorised phrases. These 200 are exactly that.</li>
+        <li><b>Low pressure.</b> Speaking in real time and noisy rooms are the barriers autistic learners report most. Here you set the pace.</li>
+        <li><b>Structure you can see.</b> Explicit, step-by-step practice with sound, sight and speech together helped learners with dyslexia most.</li>
+        <li><b>Count what you did, not how fluent you feel.</b> Adults with ADHD tend to rate themselves lower than they actually are. The counter shows real reps.</li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- DRILL -->
+  <div id="drill" hidden>
+    <div class="card" id="card"></div>
+  </div>
+
+  <!-- STORY -->
+  <div id="story" hidden>
+    <div class="card" id="storycard"></div>
+  </div>
+
+  <!-- DONE -->
+  <div id="done" hidden>
+    <div class="card" id="donecard"></div>
+  </div>
+</div>
+
+<script>
+const RAW=`J'en peux pu|I can't take it anymore|zhahn puh POO
+J'm'en fous|I don't care|zhmahn FOO
+Chu pu capable|I can't do it anymore|shoo poo kah-PAHBL
+Chu à boutte|I'm at my limit|shoo zah BOOT
+J'ai le goût de...|I feel like...|zhay luh GOO duh
+J'ai pas le goût|I don't feel like it|zhay pah luh GOO
+J'ai hâte|I can't wait|zhay AHT
+J'ai la chienne|I'm scared|zhay lah SHYEN
+J'ai les nerfs|I'm on edge|zhay lay NAIR
+Chu crevé(e)|I'm wiped out|shoo kruh-VAY
+Chu pas dans mon assiette|I'm off today|shoo pah dahn mohn nah-SYET
+Chu sur le party|I'm in party mode|shoo soor luh PAR-tee
+Ça m'énarve|it gets on my nerves|sah may-NARV
+Ça m'écœure|it sickens / annoys me|sah may-KUHR
+Ça fait pas de sens|that makes no sense|sah fay pah duh SAHNS
+Ça a pas d'allure|that's ridiculous|sah ah pah dah-LOOR
+Ça a du bon sens|that makes sense|sah ah doo bohn SAHNS
+Ça se peut-tu|can you believe it?|sah suh puh-TOO
+Ça adonne bien|that works out nicely|sah ah-DUHN byehn
+Ça adonne mal|bad timing|sah ah-DUHN MAHL
+Ça va être correct|it'll be fine|sah vah ET kor-REKT
+Ça va être le fun|it'll be great|sah vah ET luh FUHN
+Ça va faire|that's enough|sah vah FAIR
+Ça tire de la patte|it's dragging on|sah TEER duh lah PAHT
+Ça pogne|it catches on / it works|sah POHN-yuh
+Ça roule|things are going well|sah ROOL
+Ça brasse|things are lively / busy|sah BRAHSS
+Ça file|it's going well|sah FEEL
+Ça sent mauvais|it smells bad|sah sahn moh-VAY
+Ça coûte cher en maudit|it costs a fortune|sah koot SHAIR ahn moh-DEE
+C'est de valeur|that's a shame|say duh vah-LUHR
+C'est donc bin|wow that's so...|say dohnk BEHN
+C'est ben correct|it's totally fine|say behn kor-REKT
+C'est ben mieux de même|it's much better this way|say behn myuh duh MEM
+C'est pas mêlant|no kidding / it's wild|say pah meh-LAHN
+C'est pas évident|it's not easy|say pah zay-vee-DAHN
+C'est une affaire de fou|it's crazy|say toon ah-FAIR duh FOO
+C'est de l'argent jeté|it's a waste of money|say duh lar-zhahn zhuh-TAY
+C'est sûr et certain|for sure|say SOOR ay sair-TEHN
+C'est de même|that's how it is|say duh MEM
+C'est tough|it's hard|say TUHF
+C'est pas de tes affaires|none of your business|say pah duh tay zah-FAIR
+C'est tout ce que ça prend|that's all it takes|say too suh kuh sah PRAHN
+C'est pas fort|it's not great|say pah FOR
+C'est ben trop cher|it's way too expensive|say behn troh SHAIR
+C'est le boutte du boutte|it's the absolute limit|say luh BOOT doo BOOT
+C'est pas d'avance|that's not helping|say pah dah-VAHNS
+C'est pas pour moi|not my thing|say pah poor MWAH
+C'est pas le temps|it's not the time|say pah luh TAHN
+C'est assez|that's enough|say ah-SAY
+Mon gars|my guy / my son|mohn GAH
+Ma fille|my girl / my daughter|mah FEE
+Mon boss|my boss|mohn BOSS
+Mon ex|my ex|mohn EKS
+Le monde|people|luh MOHND
+Du monde|some people|doo MOHND
+Du monde de même|people like that|doo mohnd duh MEM
+Un gros nono|a big dummy|uhn groh noh-NOH
+Un téteux|a suck-up|uhn tay-TUH
+Un bon à rien|a good-for-nothing|uhn bohn ah RYEHN
+Un cave|an idiot (vulgar)|uhn KAHV
+Une tête de cochon|a stubborn person|oon tet duh koh-SHOHN
+Un bon gars|a good guy|uhn bohn GAH
+Une bonne fille|a nice woman|oon bunn FEE
+Pis toi?|and you?|pee TWAH
+Pis, comment ça va?|so how are you?|pee koh-mahn sah VAH
+Quessé que tu fais?|what are you doing?|keh-SAY kuh too FAY
+Quessé ça?|what's that?|keh-SAY SAH
+Quessé qui se passe?|what's going on?|keh-SAY kee suh PAHSS
+Quessé tu veux?|what do you want?|keh-SAY too VUH
+Où c'est que...?|where is...?|oo say KUH
+Comment c'est que...?|how is it that...?|koh-mahn say KUH
+Pourquoi c'est faire?|what for?|poor-kwah say FAIR
+Quand c'est que...?|when is...?|kahn say KUH
+T'es où?|where are you?|tay OO
+T'es-tu correct?|are you okay?|tay-TOO kor-REKT
+T'as-tu faim?|are you hungry?|tah-TOO FEHN
+T'sais-tu quoi?|you know what?|tay-TOO KWAH
+Qui c'est qui...?|who is it that...?|kee say KEE
+T'es don' ben...|you're so...|tay dohn BEHN
+Tu viens-tu?|are you coming?|tsoo vyehn-TOO
+Vas-tu être là?|will you be there?|vah-TOO et LAH
+Peux-tu m'aider?|can you help me?|puh-TOO may-DAY
+As-tu vu ça?|did you see that?|ah-TOO voo SAH
+As-tu des nouvelles?|any news?|ah-TOO day noo-VEL
+As-tu une minute?|got a minute?|ah-TOO oon mee-NOOT
+Qu'est-ce tu penses?|what do you think?|kess too PAHNSS
+Pour vrai|for real|poor VRAY
+Pour de vrai|for real (serious)|poor duh VRAY
+Sérieux?|seriously?|say-ree-UH
+Franchement|honestly|frahn-shuh-MAHN
+Genre|like / kind of|ZHAHNR
+Comme|like (filler)|KUHM
+Anyway là|anyway|EH-nee-way LAH
+En tout cas|anyway|ahn too KAH
+De toute façon|anyway / either way|duh toot fah-SOHN
+Mettons que|let's say that|meh-TOHN kuh
+Disons que|let's say|dee-ZOHN kuh
+Quand même|even so|kahn MEM
+Une espèce de|a kind of|oon es-PES duh
+Tantôt|in a bit / earlier|tahn-TOH
+Astheure|now|ahs-TUHR
+À cette heure|now|ah set UHR
+En masse|plenty|ahn MAHSS
+Pas longtemps|not long|pah lohn-TAHN
+Depuis longtemps|for a long time|duh-pwee lohn-TAHN
+Pour l'instant|for now|poor lehn-STAHN
+À la longue|in the long run|ah lah LOHNG
+Une couple de|a couple of|oon KOOPL duh
+Une bonne gang|a big group|oon bunn GAHNG
+Toute la gang|the whole group|toot lah GAHNG
+Tout de suite|right away|too duh SWEET
+Dans le temps|back in the day|dahn luh TAHN
+Dans l'beau milieu|right in the middle|dahn l BOH mee-LYUH
+Au complet|entirely|oh kohm-PLAY
+Su'l bord de|next to / beside|sool BOR duh
+En ville|downtown|ahn VEEL
+Su'a rue|on the street|sool-ah ROO
+Dans le fond|basically|dahn luh FOHN
+Dans le trafic|in traffic|dahn luh trah-FEEK
+Prendre l'char|to take the car|prahn-druh l SHAHR
+Faire le plein|to fill up the tank|fair luh PLEHN
+Pogner un ticket|to get a ticket|poh-NYAY uhn TEE-ket
+Une poutine|poutine|oon poo-TEEN
+Un smoked meat|smoked meat sandwich|uhn smohkt MEET
+Une pointe de tarte|a slice of pie|oon pwehnt duh TART
+Un café Tim's|a Tim Hortons coffee|uhn kah-FAY TEEMZ
+Le déjeuner|breakfast|luh day-zhuh-NAY
+Le dîner|lunch|luh dee-NAY
+Le souper|dinner|luh soo-PAY
+Une collation|a snack|oon koh-lah-SYOHN
+Un lunch|a packed lunch|uhn LUHNSH
+Des chips|chips|day SHEEPS
+Du fromage en grains|cheese curds|doo fro-MAZH ahn GREHN
+Une crème glacée molle|soft-serve ice cream|oon krem glah-SAY MOHL
+Une frette|a cold beer|oon FRET
+Une grosse froide|a big cold beer|oon gross FRWAD
+Une caisse de 24|a case of 24 beers|oon kes duh vehnt-KAHTR
+Prendre un coup|to have a drink|prahn-druh uhn KOO
+Être chaud|to be tipsy|etr SHOH
+Il fait frette|it's cold|eel fay FRET
+Il fait chaud en titi|it's very hot|eel fay shoh ahn tee-TEE
+Il mouille|it's raining|eel MOOY
+Y neige|it's snowing|ee NEZH
+Y fait beau|it's nice out|ee fay BOH
+Une bordée de neige|a heavy snowfall|oon bor-DAY duh NEZH
+Pelleter|to shovel snow|peh-leh-TAY
+Des pneus d'hiver|winter tires|day pnuh dee-VAIR
+Du verglas|freezing rain / ice|doo vair-GLAH
+Un frette de canard|brutally cold weather|uhn FRET duh kah-NAHR
+Avoir une shift|to have a shift|ah-vwahr oon SHEEFT
+Faire de l'argent|to make money|fair duh lar-ZHAHN
+Être cassé|to be broke|etr kah-SAY
+Être sur le chômage|to be on unemployment|etr soor luh shoh-MAZH
+Une piasse|a dollar|oon PYAHSS
+Deux piasses|two bucks|duh PYAHSS
+Pas une cenne|not a cent|pah zoon SEN
+Une cenne noire|a penny|oon sen NWAHR
+Faire l'épicerie|to do the grocery shopping|fair lay-pees-REE
+Faire du lavage|to do laundry|fair doo lah-VAHZH
+Faire le ménage|to clean the house|fair luh may-NAZH
+Faire la vaisselle|to do the dishes|fair lah veh-SEL
+Passer la balayeuse|to vacuum|pah-SAY lah bah-lay-YUHZ
+Sortir les vidanges|to take out the trash|sor-TEER lay vee-DAHNZH
+Partir une brassée|to start a load of laundry|par-TEER oon brah-SAY
+Texter|to text|tek-STAY
+Appelle-moi|call me|ah-PEL mwah
+Rappelle-moi|call me back|rah-PEL mwah
+Je te texte|I'll text you|zhuh tuh TEKST
+Envoye-moi ça|send it to me|ahn-VWAHY mwah SAH
+Envoye donc|come on / go ahead|ahn-VWAHY DOHNK
+Envoye, on y va|come on, let's go|ahn-VWAHY ohn ee VAH
+Attache ta tuque|hold on tight|ah-TASH tah TSOOK
+Calme-toi le pompon|calm down|kahlm-twah luh pohm-POHN
+Lâche-moi|leave me alone|lahsh MWAH
+Laisse faire|forget it|less FAIR
+Viens-t'en|come on over|vyehn TAHN
+Pars pas|don't leave|PAR pah
+Reste là|stay there|rest LAH
+Prends ton temps|take your time|prahn tohn TAHN
+Prends ça mou|take it easy|prahn sah MOO
+Prends-en soin|take care|prahn-zahn SWEHN
+Watch-toi|watch yourself|WAHCH-twah
+Fais ça vite|do it quickly|fay sah VEET
+Dépêche-toi|hurry up|day-PESH-twah
+Grouille-toi|move it|GROO-ee-twah
+Bouge pas|don't move|boozh PAH
+Viens ici|come here|vyehn ee-SEE
+Wô, minute!|whoa, hang on!|woh mee-NOOT
+Attends une minute|hold on a sec|ah-TAHN zoon mee-NOOT
+Tu parles d'une affaire|what a thing|too parl doon ah-FAIR
+Tu parles!|tell me about it|too PARL
+Pas rapport|irrelevant / no way|pah rah-POR
+Pas de bon sens|unbelievable|pah duh bohn SAHNS
+Ah ben, par exemple|well I never|ah behn par ehg-ZAHMPL
+Mon doux|good grief|mohn DOO
+Sacrament (vulgar)|strong swear|sah-krah-MAHN
+Calvaire (vulgar)|strong swear|kal-VAIR
+Torrieu (mild)|mild swear|toh-RYUH
+Viarge (mild)|mild swear|vyarzh`;
+const P=RAW.split("\n").map((l,i)=>{const[fr,en,pr]=l.split("|");return{i,fr,en,pr,say:fr.replace(/\s*\((vulgar|mild)\)/,"").replace(/\(e\)/,"")}});
+const GROUPS=[
+ {id:"feel",name:"Feelings & reactions",a:0,b:50},
+ {id:"people",name:"People",a:50,b:64},
+ {id:"ask",name:"Questions",a:64,b:87},
+ {id:"fill",name:"Fillers, time & place",a:87,b:120},
+ {id:"food",name:"Food, drink & the car",a:120,b:140},
+ {id:"weather",name:"Weather",a:140,b:150},
+ {id:"money",name:"Money, work & chores",a:150,b:165},
+ {id:"cmd",name:"Commands & exclamations",a:165,b:200},
+ {id:"mix",name:"Mix of everything",a:0,b:200}
+];
+const REP_CUES=["Slow and clear","Natural speed","Quick, like you mean it"];
+const KEY="qc-drill-v1";
+let S={p:{},reps:0,sessions:0,scale:1};
+try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s&&s.p)S=Object.assign(S,s)}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+let cfg={group:"feel",mode:"shadow",size:5};
+const $=id=>document.getElementById(id);
+
+/* voice */
+const TTS="speechSynthesis" in window&&"SpeechSynthesisUtterance" in window;
+const voice=TTS;
+let frVoice=null,audioOK=null;
+function pickVoice(){
+  if(!TTS)return;
+  try{const v=speechSynthesis.getVoices()||[];
+  frVoice=v.find(x=>/fr[-_]CA/i.test(x.lang))||v.find(x=>/^fr/i.test(x.lang))||null}catch(e){}
+}
+if(TTS){pickVoice();try{speechSynthesis.addEventListener("voiceschanged",pickVoice)}catch(e){speechSynthesis.onvoiceschanged=pickVoice}}
+else{$("novoice").hidden=false}
+let claudeTTS=null;
+try{window.claude&&window.claude.use&&window.claude.use("tts").then(t=>{claudeTTS=t}).catch(()=>{})}catch(e){}
+const clip=new Audio();clip.preload="auto";
+function speak(text,rate){
+  const p=P.find(x=>x.say===text);
+  if(p){
+    try{
+      if("speechSynthesis" in window)speechSynthesis.cancel();
+      clip.pause();
+      clip.src="audio/"+String(p.i+1).padStart(3,"0")+".mp3";
+      const r=rate<.8?.7:1;clip.defaultPlaybackRate=r;clip.playbackRate=r;
+      clip.preservesPitch=true;clip.webkitPreservesPitch=true;
+      clip.onplaying=()=>{clip.playbackRate=r};clip.onended=null;storyAll=false;
+      clip.play().then(()=>showAudioNote(false)).catch(e=>{if(!e||e.name!=="AbortError")speakFallback(text,rate)});
+      return;
+    }catch(e){}
+  }
+  speakFallback(text,rate);
+}
+function speakFallback(text,rate){
+  if(claudeTTS){
+    claudeTTS.speak(text,{language:"fr-CA",rate:Math.max(.7,Math.min(1.5,rate))}).then(()=>{audioOK=true;showAudioNote(false)}).catch(err=>{
+      if(err&&(err.code==="not_granted"||err.code==="unavailable")){claudeTTS=null;speakBrowser(text,rate)}
+    });
+    return;
+  }
+  speakBrowser(text,rate);
+}
+function speakBrowser(text,rate){
+  if(!TTS){showAudioNote(true);return}
+  pickVoice();
+  try{
+    speechSynthesis.cancel();speechSynthesis.resume();
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang=frVoice?frVoice.lang:"fr-CA";if(frVoice)u.voice=frVoice;u.rate=rate;u.volume=1;
+    let started=false;u.onstart=()=>{started=true;audioOK=true;showAudioNote(false)};
+    u.onerror=ev=>{if(ev&&ev.error!=="interrupted"&&ev.error!=="canceled")showAudioNote(true,ev.error)};
+    speechSynthesis.speak(u);
+    setTimeout(()=>{if(!started&&audioOK!==true&&!speechSynthesis.speaking)showAudioNote(true)},2500);
+  }catch(e){showAudioNote(true,e.message)}
+}
+function showAudioNote(on,why){
+  document.querySelectorAll(".audionote").forEach(n=>{n.hidden=!on;if(on)n.textContent="No sound came out"+(why?" ("+why+")":"")+". Check your volume and that the silent switch is off, then tap Listen again."});
+}
+
+/* home */
+function lvl(i){return(S.p[i]&&S.p[i].l)||0}
+function renderHome(){
+  document.documentElement.style.setProperty("--scale",S.scale);
+  const practised=Object.keys(S.p).length;
+  const solid=Object.values(S.p).filter(x=>x.l>=2).length;
+  $("stats").innerHTML=`<div><b>${S.reps}</b><span class="muted">times said out loud</span></div><div><b>${practised}</b><span class="muted">of 200 practised</span></div><div><b>${solid}</b><span class="muted">feel solid</span></div>`;
+  $("groups").innerHTML=GROUPS.map(g=>{
+    let n=g.b-g.a,done=0;for(let i=g.a;i<g.b;i++)if(lvl(i)>=2)done++;
+    return`<button class="chip" id="g-${g.id}" data-g="${g.id}" aria-pressed="${cfg.group===g.id}">${g.name}<small>${done} / ${n} solid</small></button>`}).join("");
+  document.querySelectorAll("#modes button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.mode===cfg.mode));
+  document.querySelectorAll("#sizes button").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.size===cfg.size));
+  renderStoryList();
+  $("modehelp").textContent=cfg.mode==="shadow"
+    ?"See the phrase, hear it, then say it three times. Best for phrases you haven't met yet."
+    :"See the English, say the French from memory, then check. Best once a theme feels familiar.";
+}
+$("groups").onclick=e=>{const b=e.target.closest("[data-g]");if(b){cfg.group=b.dataset.g;renderHome()}};
+$("modes").onclick=e=>{const b=e.target.closest("[data-mode]");if(b){cfg.mode=b.dataset.mode;renderHome()}};
+$("sizes").onclick=e=>{const b=e.target.closest("[data-size]");if(b){cfg.size=+b.dataset.size;renderHome()}};
+$("bigger").onclick=()=>{S.scale=S.scale>1?1:1.2;save();renderHome()};
+$("reset").onclick=()=>{$("resetconfirm").hidden=false};
+$("testaudio").onclick=()=>speak(P[21].say,1);
+$("resetno").onclick=()=>{$("resetconfirm").hidden=true};
+$("resetyes").onclick=()=>{S={p:{},reps:0,sessions:0,scale:S.scale};save();$("resetconfirm").hidden=true;renderHome()};
+
+/* session */
+let Q=[],qi=0,stage,reps,results=[];
+function pick(){
+  const g=GROUPS.find(x=>x.id===cfg.group);
+  const pool=P.slice(g.a,g.b).map(p=>({p,k:lvl(p.i)*10+((S.p[p.i]&&S.p[p.i].t)||0)/1e13+Math.random()*3}));
+  pool.sort((x,y)=>x.k-y.k);
+  return pool.slice(0,cfg.size).map(x=>x.p);
+}
+$("start").onclick=()=>{Q=pick();qi=0;results=[];$("home").hidden=true;$("done").hidden=true;$("drill").hidden=false;startCard()};
+function startCard(){stage=cfg.mode==="recall"?"recall":"reps";reps=0;renderCard();if(stage==="reps")speak(Q[qi].say,.9)}
+function renderCard(){
+  const p=Q[qi],pct=qi/Q.length*100,showFr=stage!=="recall";
+  let h=`<div class="toolbar" style="justify-content:space-between"><span class="label">Phrase ${qi+1} of ${Q.length}</span><button class="small" id="quit">End session</button></div>
+  <div class="progress"><i style="width:${pct}%"></i></div>`;
+  if(!showFr){
+    h+=`<span class="label">Say this in Québécois</span><p class="prompt">“${esc(p.en)}”</p>
+    <div class="hiddenbox">Say it out loud first, even if you're unsure.</div>
+    <button class="primary" id="reveal">I said it · show me</button>`;
+  }else{
+    h+=`<div style="display:flex;flex-direction:column;gap:6px"><p class="phrase" lang="fr-CA">${esc(p.fr)}</p>
+    <p class="pron"><span class="label">Sounds like</span><br>${esc(p.pr)}</p>
+    <p class="meaning muted">${esc(p.en)}</p></div>
+    <div class="toolbar"><button id="listen">Listen</button><button id="slow">Listen slowly</button><a class="extlisten" href="https://translate.google.com/?sl=fr&tl=en&op=translate&text=${encodeURIComponent(p.say)}" target="_blank" rel="noopener">Hear it in Google Translate ↗</a></div><p class="note audionote" hidden></p>`;
+    if(stage==="reps"){
+      h+=`<div class="reps"><span class="label">Now say it out loud · tap after each one</span>`+
+      REP_CUES.map((c,k)=>`<button class="rep ${k<reps?"done":k===reps?"next":""}" id="rep-${k}" data-rep="${k}" ${k!==reps?"disabled":""}><span class="dot">${k<reps?"✓":k+1}</span>${c}</button>`).join("")+`</div>`;
+    }else{
+      h+=`<span class="label">How did that feel?</span><div class="rate">
+      <button id="r-again" data-r="0">Again<small>show it soon</small></button>
+      <button id="r-shaky" data-r="1">Shaky<small>getting there</small></button>
+      <button id="r-good" data-r="2">Solid<small>I can say it</small></button></div>`;
+    }
+  }
+  $("card").innerHTML=h;
+  $("quit").onclick=finish;
+  if($("reveal"))$("reveal").onclick=()=>{stage="reps";renderCard();speak(p.say,.9)};
+  if($("listen"))$("listen").onclick=()=>speak(p.say,.95);
+  if($("slow"))$("slow").onclick=()=>speak(p.say,.6);
+  $("card").querySelectorAll("[data-rep]").forEach(b=>b.onclick=()=>{reps++;S.reps++;save();if(reps>=3)stage="rate";renderCard();const n=$("card").querySelector(".rep.next,[data-r]");n&&n.focus()});
+  $("card").querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>rate(+b.dataset.r));
+  const f=$("card").querySelector("#reveal,.rep.next");f&&f.focus({preventScroll:true});
+}
+function rate(r){
+  const p=Q[qi],cur=S.p[p.i]||{l:0,n:0};
+  cur.n++;cur.t=Date.now();cur.l=r===2?Math.min(3,Math.max(2,cur.l+1)):r===1?1:0;
+  S.p[p.i]=cur;save();results.push({p,r});
+  qi++;if(qi>=Q.length)finish();else startCard();
+}
+function finish(){
+  if("speechSynthesis" in window)speechSynthesis.cancel();
+  if(results.length)S.sessions++;save();
+  $("drill").hidden=true;$("done").hidden=false;
+  const said=results.length*3,weak=results.filter(x=>x.r<2);
+  let h=`<span class="label">Session done</span><h2>You said ${results.length} phrase${results.length===1?"":"s"} out loud ${said} times.</h2>
+  <p class="muted">That counts whether or not it felt smooth. Fluency comes from the reps.</p>`;
+  if(weak.length)h+=`<h3>Bring these back next time</h3><ul class="list">${weak.map(x=>`<li><span lang="fr-CA">${esc(x.p.fr)}</span><span>${esc(x.p.en)}</span></li>`).join("")}</ul>`;
+  h+=`<div class="toolbar"><button class="primary" id="again">Another round</button><button id="back">Back to themes</button></div>`;
+  $("donecard").innerHTML=h;
+  $("again").onclick=()=>$("start").onclick();
+  $("back").onclick=()=>{$("done").hidden=true;$("home").hidden=false;renderHome()};
+  $("again").focus();
+}
+/* stories */
+const STORIES=[{"title": "Une grosse semaine", "en": "A big week", "group": "feel", "gist": "Julie is exhausted because her boss gave her three projects. Marc is doing fine, and they plan a beer on Friday.", "lines": [["J", "Salut Marc. Chu à boutte, là.", "Hi Marc. I'm at my limit."], ["M", "Pour vrai? Quessé qui se passe?", "For real? What's going on?"], ["J", "Mon boss m'a donné trois projets. J'en peux pu.", "My boss gave me three projects. I can't take it anymore."], ["M", "Ça a pas d'allure. T'es-tu correct?", "That's ridiculous. Are you okay?"], ["J", "Chu crevée. Pis toi?", "I'm wiped out. And you?"], ["M", "Moi, ça roule. J'ai hâte à vendredi.", "Me, things are going well. I can't wait for Friday."], ["J", "Moi aussi. J'ai le goût d'une frette.", "Me too. I feel like a cold beer."], ["M", "Envoye donc! Ça va être le fun.", "Go for it! It'll be great."]]}, {"title": "Le nouveau collègue", "en": "The new co-worker", "group": "people", "gist": "Julie thinks the new guy at work is a stubborn suck-up. Marc thinks he's a good guy. They agree there are people like that everywhere.", "lines": [["M", "As-tu vu le nouveau gars au bureau?", "Have you seen the new guy at the office?"], ["J", "Oui. C'est un téteux.", "Yes. He's a suck-up."], ["M", "Ah ben, par exemple! Pourquoi?", "Well I never! Why?"], ["J", "Il dit oui à toute au boss.", "He says yes to everything the boss says."], ["M", "Moi, je pense que c'est un bon gars.", "Me, I think he's a good guy."], ["J", "Mettons. Mais c'est une tête de cochon.", "Let's say. But he's stubborn."], ["M", "Du monde de même, y en a partout.", "People like that, they're everywhere."], ["J", "Tu parles!", "Tell me about it!"]]}, {"title": "Au téléphone", "en": "On the phone", "group": "ask", "gist": "Julie calls Marc because her car won't start. He's downtown and promises to come before dinner.", "lines": [["J", "Allô? T'es où?", "Hello? Where are you?"], ["M", "Su'a rue, en ville. Quessé tu veux?", "On the street, downtown. What do you want?"], ["J", "As-tu une minute? Peux-tu m'aider?", "Got a minute? Can you help me?"], ["M", "Ben oui. Quessé qui se passe?", "Sure. What's going on?"], ["J", "Mon char part pas.", "My car won't start."], ["M", "T'sais-tu quoi? J'arrive tantôt.", "You know what? I'll be there in a bit."], ["J", "Vas-tu être là avant le souper?", "Will you be there before dinner?"], ["M", "C'est sûr et certain.", "For sure."]]}, {"title": "La fin de semaine", "en": "The weekend", "group": "fill", "gist": "The whole group is going to a cottage a couple of hours away this weekend, and Julie invites Marc to come along.", "lines": [["M", "Pis, comment ça va?", "So, how are you?"], ["J", "Ben, genre, correct. Qu'est-ce tu fais en fin de semaine?", "Well, like, okay. What are you doing this weekend?"], ["M", "Dans le fond, pas grand-chose. Pis toi?", "Basically, not much. And you?"], ["J", "Toute la gang s'en va au chalet.", "The whole group is going to the cottage."], ["M", "Ah oui? C'est-tu loin?", "Oh yeah? Is it far?"], ["J", "Pas longtemps. Une couple d'heures.", "Not long. A couple of hours."], ["M", "Quand même! Y a-tu de la place?", "Even so! Is there room?"], ["J", "En masse. Viens-t'en!", "Plenty. Come along!"]]}, {"title": "Au casse-croûte", "en": "At the snack bar", "group": "food", "gist": "They order poutine and a smoked meat sandwich. Julie skips the beer because she's driving later, but wants soft-serve for dessert.", "lines": [["J", "J'ai faim en maudit.", "I'm starving."], ["M", "On se prend une poutine?", "Should we get a poutine?"], ["J", "Oui, avec du fromage en grains.", "Yes, with cheese curds."], ["M", "Pis une grosse froide?", "And a big cold beer?"], ["J", "Non, je prends l'char tantôt.", "No, I'm taking the car later."], ["M", "Correct. Moi, j'prends un smoked meat.", "Okay. I'll have a smoked meat."], ["J", "Pis pour dessert, une crème glacée molle!", "And for dessert, a soft-serve!"], ["M", "Ça a du bon sens.", "That makes sense."]]}, {"title": "La tempête", "en": "The storm", "group": "weather", "gist": "There's a big snowstorm and it's brutally cold. Julie has winter tires but has to shovel, and freezing rain is on the way.", "lines": [["M", "As-tu vu dehors? Y neige!", "Have you seen outside? It's snowing!"], ["J", "Oui, une vraie bordée de neige.", "Yes, a real heavy snowfall."], ["M", "Pis y fait frette en titi.", "And it's really cold."], ["J", "C'est un frette de canard.", "It's brutally cold."], ["M", "As-tu tes pneus d'hiver?", "Do you have your winter tires on?"], ["J", "Oui. Mais faut que je pellette l'entrée.", "Yes. But I have to shovel the driveway."], ["M", "Attache ta tuque, y annoncent du verglas.", "Hold on tight, they're forecasting freezing rain."], ["J", "Ah non! Chu pu capable de l'hiver.", "Oh no! I can't take winter anymore."]]}, {"title": "Le samedi", "en": "Saturday", "group": "money", "gist": "They split the Saturday chores. Marc has a restaurant shift after, but he's still always broke.", "lines": [["J", "Quessé que tu fais aujourd'hui?", "What are you doing today?"], ["M", "Faut que je fasse l'épicerie pis le lavage.", "I have to do the groceries and the laundry."], ["J", "Moi, je fais le ménage.", "Me, I'm cleaning the house."], ["M", "Peux-tu sortir les vidanges?", "Can you take out the trash?"], ["J", "Oui. Pis toi, passe la balayeuse.", "Yes. And you, vacuum."], ["M", "Après, j'ai une shift au resto.", "After that, I have a shift at the restaurant."], ["J", "Tu fais de l'argent, au moins?", "At least you're making money?"], ["M", "Pas en masse. Chu toujours cassé.", "Not much. I'm always broke."]]}, {"title": "En retard", "en": "Running late", "group": "cmd", "gist": "They're late for a seven o'clock movie and Marc can't find his keys. He finds them, and Julie tells him to drive carefully.", "lines": [["J", "Marc! Dépêche-toi, on est en retard!", "Marc! Hurry up, we're late!"], ["M", "Wô, minute! Je cherche mes clés.", "Whoa, hang on! I'm looking for my keys."], ["J", "Grouille-toi! Le film commence à sept heures.", "Move it! The movie starts at seven."], ["M", "Calme-toi le pompon. On a le temps.", "Calm down. We have time."], ["J", "Non, y a du trafic.", "No, there's traffic."], ["M", "Bon, je les ai. Envoye, on y va!", "Okay, I've got them. Come on, let's go!"], ["J", "Enfin! Prends ça mou sur la route, par exemple.", "Finally! Take it easy on the road, though."], ["M", "Inquiète-toi pas.", "Don't worry."]]}];
+const WHO={J:"Julie",M:"Marc"};
+let si=0,storyAll=false,storyLine=-1,showEN=false,openEN={};
+function renderStoryList(){
+  if(!S.st)S.st={};
+  $("storylist").innerHTML=STORIES.map((s,k)=>`<button class="chip" id="story-${k}" data-s="${k}"><span lang="fr-CA">${esc(s.title)}</span><small>${esc(s.en)}${S.st[k]?" · played "+S.st[k]+"×":""}</small></button>`).join("");
+}
+$("storylist").onclick=e=>{const b=e.target.closest("[data-s]");if(b)openStory(+b.dataset.s)};
+function openStory(k){si=k;showEN=false;openEN={};storyLine=-1;$("home").hidden=true;$("done").hidden=true;$("drill").hidden=true;$("story").hidden=false;renderStory();window.scrollTo(0,0)}
+function renderStory(){
+  const s=STORIES[si];
+  let h=`<div class="toolbar" style="justify-content:space-between"><span class="label">Story ${si+1} of ${STORIES.length}</span><button class="small" id="storyback">Back</button></div>
+  <div><h2 lang="fr-CA">${esc(s.title)}</h2><p class="muted">${esc(s.en)}</p></div>
+  <p class="note">Listen once without the English. Then play it again. Tap any line to hear it on its own.</p>
+  <div class="toolbar"><button class="primary" id="playstory">${storyAll?"Stop":"Play story"}</button><button id="toggleen" aria-pressed="${showEN}">${showEN?"Hide English":"Show all English"}</button></div>
+  <div class="lines">`+s.lines.map((l,k)=>`<div class="line ${l[0]==="M"?"m":""} ${k===storyLine?"playing":""}" id="line-${k}">
+    <span class="who">${WHO[l[0]]}</span>
+    <button class="fr" data-line="${k}" lang="fr-CA">${esc(l[1])}</button>
+    <button class="enbtn" data-en="${k}" aria-expanded="${!!(showEN||openEN[k])}">EN</button>
+    <span class="en" ${showEN||openEN[k]?"":"hidden"}>${esc(l[2])}</span></div>`).join("")+`</div>
+  <details class="gist"><summary>What was it about?</summary><p>Think about it first, then open this. ${esc(s.gist)}</p></details>
+  <div class="toolbar"><button id="practisestory">Practise these phrases</button>${si<STORIES.length-1?`<button id="nextstory">Next story</button>`:""}</div>`;
+  $("storycard").innerHTML=h;
+  $("storyback").onclick=closeStory;
+  $("playstory").onclick=()=>{if(storyAll){stopStory()}else{playFrom(0,true)}};
+  $("toggleen").onclick=()=>{showEN=!showEN;renderStory()};
+  $("storycard").querySelectorAll("[data-line]").forEach(b=>b.onclick=()=>playFrom(+b.dataset.line,false));
+  $("storycard").querySelectorAll("[data-en]").forEach(b=>b.onclick=()=>{const k=+b.dataset.en;openEN[k]=!openEN[k];renderStory()});
+  $("practisestory").onclick=()=>{stopStory();cfg.group=s.group;cfg.mode="shadow";$("story").hidden=true;$("start").onclick()};
+  if($("nextstory"))$("nextstory").onclick=()=>{stopStory();openStory(si+1)};
+}
+function markLine(k){storyLine=k;document.querySelectorAll("#storycard .line").forEach((el,j)=>el.classList.toggle("playing",j===k))}
+function playFrom(k,all){
+  const s=STORIES[si];
+  if("speechSynthesis" in window)speechSynthesis.cancel();
+  clip.pause();storyAll=all;
+  clip.onplaying=null;clip.defaultPlaybackRate=1;clip.playbackRate=1;
+  clip.src=`audio/stories/s${si+1}-${k+1}.mp3`;
+  markLine(k);
+  $("playstory").textContent=all?"Stop":"Play story";
+  clip.onended=()=>{
+    if(storyAll&&k+1<s.lines.length){setTimeout(()=>{if(storyAll)playFrom(k+1,true)},350)}
+    else{if(storyAll){S.st=S.st||{};S.st[si]=(S.st[si]||0)+1;save()}storyAll=false;markLine(-1);const b=$("playstory");if(b)b.textContent="Play story"}
+  };
+  clip.play().then(()=>showAudioNote(false)).catch(e=>{if(!e||e.name!=="AbortError"){storyAll=false;markLine(-1)}});
+}
+function stopStory(){storyAll=false;clip.pause();clip.onended=null;markLine(-1);const b=$("playstory");if(b)b.textContent="Play story"}
+function closeStory(){stopStory();$("story").hidden=true;$("home").hidden=false;renderHome()}
+
+function esc(s){return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+document.addEventListener("keydown",e=>{
+  if($("drill").hidden||e.target.tagName==="INPUT")return;
+  if(e.key==="l"||e.key==="L"){const b=$("listen");b&&!b.disabled&&b.click()}
+});
+renderHome();
+</script>
+
+<script>
+if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}
+</script>
+</body>
+</html>
