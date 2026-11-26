@@ -542,31 +542,50 @@ function hearWord(w){
   if(TTS){try{pickVoice();speechSynthesis.cancel();clip.pause();const u=new SpeechSynthesisUtterance(t);u.lang=frVoice?frVoice.lang:"fr-CA";if(frVoice)u.voice=frVoice;u.rate=.7;speechSynthesis.speak(u);return}catch(e){}}
   speak(Q[qi].say,.6);
 }
+let srInst=null,srFresh=true,srGood=0,srRun=0,srTimer=null;
+function stopAudioForMic(){
+  /* iPhone shares one audio session between playback and the mic: fully release the clip first. */
+  try{clip.pause();clip.removeAttribute("src");clip.load()}catch(e){}
+  if(TTS)try{speechSynthesis.cancel()}catch(e){}
+}
+function endListening(msg,fresh){
+  clearTimeout(srTimer);listening=false;if(fresh)srFresh=true;if(msg!==undefined)micMsg=msg;renderCard();
+}
 function startListening(){
-  if(listening){try{rec.stop()}catch(e){}return}
-  clip.pause();if(TTS)try{speechSynthesis.cancel()}catch(e){}
-  try{rec=new SR()}catch(e){micBlocked=true;renderCard();return}
+  if(listening){try{rec.stop()}catch(e){}clearTimeout(srTimer);srTimer=setTimeout(()=>{if(listening){try{rec.abort()}catch(e){}endListening("I didn't catch that. Tap and try again.",true)}},2500);return}
+  stopAudioForMic();
+  /* Reuse one recogniser; build a new one after any failure. */
+  if(srFresh||!srInst){try{srInst&&srInst.abort()}catch(e){}try{srInst=new SR()}catch(e){micBlocked=true;micMsg="Speech recognition isn't available here, so taps count your reps instead.";renderCard();return}srFresh=false}
+  rec=srInst;const run=++srRun;
   rec.lang="fr-CA";rec.interimResults=true;rec.maxAlternatives=5;rec.continuous=false;
-  let finals=null,errored=false;liveText="";listening=true;renderCard();
+  let finals=null,errored=false,started=false;liveText="";micMsg="";listening=true;renderCard();
+  const mine=()=>run===srRun;
+  rec.onstart=rec.onaudiostart=()=>{if(mine())started=true};
   rec.onresult=ev=>{
+    if(!mine())return;
     const r=ev.results[ev.results.length-1];
     liveText=r[0].transcript;const lt=$("livetext");if(lt)lt.textContent=liveText;
     if(r.isFinal){finals=[];for(let i=0;i<r.length;i++)finals.push(r[i].transcript)}
   };
   rec.onerror=ev=>{
-    errored=true;listening=false;
-    if(ev.error==="not-allowed"||ev.error==="service-not-allowed"||ev.error==="audio-capture"){micBlocked=true;micMsg="The microphone isn't available here, so taps count your reps instead. To use the check, allow the microphone for this app in Settings, or open it in Safari."}
-    else if(ev.error==="no-speech"){micMsg="I didn't hear anything. Tap and try again."}
-    else if(ev.error!=="aborted"){micMsg="Speech recognition stopped ("+ev.error+"). Tap and try again."}
-    renderCard();
+    if(!mine())return;errored=true;
+    const e=ev.error||"unknown";
+    if(e==="aborted"){endListening(undefined,true);return}
+    if(e==="no-speech"){endListening("I didn't hear anything. Tap and try again.");return}
+    if(e==="not-allowed"&&srGood===0){micBlocked=true;endListening("The microphone is turned off for this app, so taps count your reps instead. To use the check, allow Microphone and Speech Recognition for Safari in Settings, then reopen the app.",true);return}
+    endListening("The microphone didn't start ("+e+"). Tap and try again.",true);
   };
   rec.onend=()=>{
-    if(errored)return;listening=false;
+    if(!mine()||errored)return;clearTimeout(srTimer);listening=false;
     if(!finals&&liveText)finals=[liveText];
-    if(!finals){micMsg="I didn't hear anything. Tap and try again.";renderCard();return}
-    micMsg="";const g=grade(Q[qi].say,finals);repRes[reps]=g;countRep();
+    if(!finals){endListening("I didn't hear anything. Tap and try again.",true);return}
+    srGood++;micMsg="";const g=grade(Q[qi].say,finals);repRes[reps]=g;countRep();
   };
-  try{rec.start()}catch(e){listening=false;micMsg="Couldn't start the microphone. Tap and try again.";renderCard()}
+  /* Watchdog: iPhone sometimes never starts or never ends a recognition. */
+  clearTimeout(srTimer);
+  srTimer=setTimeout(()=>{if(mine()&&listening&&!started){try{rec.abort()}catch(e){}endListening("The microphone didn't start. Tap and try again.",true)}},4000);
+  setTimeout(()=>{if(mine()&&listening){try{rec.stop()}catch(e){}setTimeout(()=>{if(mine()&&listening){try{rec.abort()}catch(e){}if(liveText){listening=false;srFresh=true;srGood++;const g=grade(Q[qi].say,[liveText]);repRes[reps]=g;countRep()}else endListening("I didn't catch that. Tap and try again.",true)}},2000)}},12000);
+  try{rec.start()}catch(e){endListening("Couldn't start the microphone ("+(e&&e.name||"error")+"). Tap and try again.",true)}
 }
 let micMsg="";
 function countRep(){reps++;S.reps++;save();if(reps>=3)stage="rate";renderCard();const n=$("card").querySelector(".rep.next,[data-r]");n&&n.focus({preventScroll:true})}
