@@ -20,7 +20,7 @@
 :root{
   --bg:#f5f5f7; --surface:#ffffff; --fill:#e8e8ed; --fg:#1d1d1f; --muted:#6e6e73; --line:#d2d2d7;
   --accent:#0066cc; --btn:#0071e3; --btn-hover:#0077ed; --btn-ink:#ffffff; --accent-soft:#e8f1fb;
-  --good:#248a3d; --good-soft:#e5f5e9; --eyebrow:#b64400; --bar:rgba(245,245,247,.8);
+  --good:#248a3d; --good-soft:#e5f5e9; --warn:#b25000; --warn-soft:#fdf0e2; --bad:#d70015; --bad-soft:#fde8ea; --eyebrow:#b64400; --bar:rgba(245,245,247,.8);
   --text:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Helvetica,Arial,sans-serif;
   --display:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Helvetica,Arial,sans-serif;
   --scale:1;
@@ -28,11 +28,11 @@
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#000000; --surface:#1c1c1e; --fill:#2c2c2e; --fg:#f5f5f7; --muted:#a1a1a6; --line:#3a3a3c;
   --accent:#2997ff; --btn:#0071e3; --btn-hover:#0077ed; --btn-ink:#ffffff; --accent-soft:#0d2742;
-  --good:#30d158; --good-soft:#0f2e19; --eyebrow:#f56300; --bar:rgba(22,22,23,.8); color-scheme:dark}}
+  --good:#30d158; --good-soft:#0f2e19; --warn:#ff9f0a; --warn-soft:#33240c; --bad:#ff453a; --bad-soft:#3a1412; --eyebrow:#f56300; --bar:rgba(22,22,23,.8); color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#000000; --surface:#1c1c1e; --fill:#2c2c2e; --fg:#f5f5f7; --muted:#a1a1a6; --line:#3a3a3c;
   --accent:#2997ff; --btn:#0071e3; --btn-hover:#0077ed; --btn-ink:#ffffff; --accent-soft:#0d2742;
-  --good:#30d158; --good-soft:#0f2e19; --eyebrow:#f56300; --bar:rgba(22,22,23,.8); color-scheme:dark}
+  --good:#30d158; --good-soft:#0f2e19; --warn:#ff9f0a; --warn-soft:#33240c; --bad:#ff453a; --bad-soft:#3a1412; --eyebrow:#f56300; --bar:rgba(22,22,23,.8); color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html{-webkit-text-size-adjust:100%}
@@ -157,6 +157,42 @@ button:disabled{opacity:.4;cursor:default}
 .gist summary{cursor:pointer;font-weight:600;color:var(--accent)}
 .gist p{margin-top:8px}
 
+
+/* buttons: one size, squarer corners, more room between them */
+button,.btn{border-radius:14px;min-height:48px;padding:12px 20px;font-size:1em}
+button.small,.btn.small{border-radius:14px;min-height:48px;padding:12px 20px;font-size:1em}
+.topbar-in{height:64px}
+.toolbar{gap:14px}
+.card .toolbar:not(.head) > button,.cta > .btn{flex:1 1 0;min-width:0}
+.cta{width:100%;max-width:420px;gap:14px}
+.cta > .more{flex:1 1 100%;justify-content:center}
+.chips{gap:12px}
+#groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+#groups .chip:last-child:nth-child(odd){grid-column:1/-1}
+.chip,#storylist .chip{border-radius:14px;min-height:64px;padding:12px 16px;justify-content:center}
+.seg{border-radius:16px;padding:4px;gap:4px}
+.seg button{border-radius:12px;min-height:48px}
+.rate{gap:12px}
+.rate button,.rep{border-radius:14px;min-height:56px}
+.reps{gap:12px}
+.line .enbtn{border-radius:10px;min-height:36px;padding:6px 12px}
+#resetconfirm{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+/* pronunciation check */
+.fb{border-radius:14px;padding:14px 16px;background:var(--bg);display:flex;flex-direction:column;gap:10px}
+.grade{align-self:flex-start;font-weight:600;font-size:.85em;border-radius:8px;padding:3px 10px}
+.g-ok{background:var(--good-soft);color:var(--good)} .g-mid{background:var(--warn-soft);color:var(--warn)} .g-low{background:var(--bad-soft);color:var(--bad)}
+.words{display:flex;flex-wrap:wrap;gap:8px;font-family:var(--display);font-size:1.25em;font-weight:600}
+.words .w-ok{color:var(--good);padding:6px 2px}
+.words button.w-miss{min-height:40px;padding:4px 12px;border-radius:10px;background:var(--bad-soft);color:var(--bad);font:inherit;text-decoration:underline;text-underline-offset:4px}
+.heard{font-size:.88em;color:var(--muted)}
+.rep.done:disabled{opacity:1}
+.rep .gtag{margin-left:auto;font-size:.8em;font-weight:600}
+.rep.listening{background:var(--bad-soft);box-shadow:inset 0 0 0 2px var(--bad)}
+.rep.listening .dot{border-color:var(--bad);background:var(--bad);animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(.8);opacity:.6}}
+.skipmic{align-self:center}
+@media (prefers-reduced-motion:reduce){.rep.listening .dot{animation:none}}
+
 @media (max-width:480px){
   .hero{padding-block:40px 24px}
   .tile,.card{padding:24px 18px;border-radius:20px}
@@ -208,6 +244,14 @@ button:disabled{opacity:.4;cursor:default}
         <button id="size-5" data-size="5" aria-pressed="true">5 phrases<small>About 3 min</small></button>
         <button id="size-10" data-size="10" aria-pressed="false">10 phrases<small>About 6 min</small></button>
         <button id="size-15" data-size="15" aria-pressed="false">15 phrases<small>About 10 min</small></button>
+      </div>
+      <div id="micblock" hidden style="display:contents">
+        <h3 class="sub">Check my pronunciation</h3>
+        <div class="seg" id="mics">
+          <button id="mic-on" data-mic="1" aria-pressed="true">On<small>Uses the mic</small></button>
+          <button id="mic-off" data-mic="0" aria-pressed="false">Off<small>Tap to count</small></button>
+        </div>
+        <p class="modehelp muted">Your phone's speech recognition listens to each try and shows which words came through clearly. Your voice is sent to Apple (or Google on Android) to be turned into text.</p>
       </div>
       <button class="primary wide" id="start">Start session</button>
     </section>
@@ -468,6 +512,64 @@ const GROUPS=[
  {id:"mix",name:"Mix of everything",a:0,b:200}
 ];
 const REP_CUES=["Slow and clear","Natural speed","Quick, like you mean it"];
+/* pronunciation check (speech recognition) */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition||null;
+let micBlocked=false,rec=null,listening=false,repRes=[],liveText="";
+const EQUIV={chu:["je suis","jsuis","chui","shoe","chut"],pu:["plus","pus"],pis:["puis","pi"],quesse:["qu est ce","quest ce","kesse","que c est","qu est ce que"],
+ ben:["bien","bin","bon"],bin:["bien","ben"],boutte:["bout","boute"],toute:["tout","toutes","tous"],y:["il","i","ils","ya"],frette:["fret","froid","fraite"],
+ sul:["sur le","sur l","sul"],sua:["sur la"],tsais:["tu sais","t sais","sais"],envoye:["envoie","envoyer","envoyez"],astheure:["asteure","a cette heure"],
+ don:["donc"],char:["car","chars"],pogne:["pognes","pogner","ponne"],j:["je","j"],t:["te","tu","t"],m:["me","m"],l:["le","la","l"],d:["de","d"],s:["se","s"],c:["ce","c"],qu:["que","qu"],n:["ne","n"],
+ enarve:["enerve","énerve","nerve"],tuque:["tuc","tuque"],cenne:["cent","senne","scene"],piasse:["piastre","piasses","piastres"],watch:["watch","watche"],texte:["text","textes"]};
+function norm(t){return(" "+t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[’'\-]/g," ").replace(/[^a-z0-9 ]+/g," ").replace(/\s+/g," ").trim()+" ")}
+function grade(target,alts){
+  const toks=norm(target.replace(/\.\.\./g,"")).trim().split(" ").filter(Boolean);
+  const disp=target.replace(/\.\.\./g,"").split(/\s+/).filter(Boolean);
+  let best=null;
+  for(const a of alts){
+    const T=norm(a);
+    const ok=toks.map(t=>T.includes(" "+t+" ")||(EQUIV[t]||[]).some(e=>T.includes(" "+norm(e).trim()+" ")));
+    const score=toks.length?ok.filter(Boolean).length/toks.length:0;
+    if(!best||score>best.score)best={score,ok,heard:a};
+  }
+  /* map token results back onto the words as written (j'ai = j + ai) */
+  let k=0;const words=disp.map(w=>{const n=norm(w).trim().split(" ").filter(Boolean).length||1;const part=best.ok.slice(k,k+n);k+=n;return{w,ok:part.length?part.every(Boolean):true}});
+  return{score:best.score,words,heard:best.heard};
+}
+function gradeName(sc){return sc>=.85?["Clear","g-ok"]:sc>=.5?["Almost","g-mid"]:["Not yet","g-low"]}
+function micOn(){return !!SR&&!micBlocked&&S.mic!==false}
+function hearWord(w){
+  const t=w.replace(/[?!.,«»"]/g,"");
+  if(TTS){try{pickVoice();speechSynthesis.cancel();clip.pause();const u=new SpeechSynthesisUtterance(t);u.lang=frVoice?frVoice.lang:"fr-CA";if(frVoice)u.voice=frVoice;u.rate=.7;speechSynthesis.speak(u);return}catch(e){}}
+  speak(Q[qi].say,.6);
+}
+function startListening(){
+  if(listening){try{rec.stop()}catch(e){}return}
+  clip.pause();if(TTS)try{speechSynthesis.cancel()}catch(e){}
+  try{rec=new SR()}catch(e){micBlocked=true;renderCard();return}
+  rec.lang="fr-CA";rec.interimResults=true;rec.maxAlternatives=5;rec.continuous=false;
+  let finals=null,errored=false;liveText="";listening=true;renderCard();
+  rec.onresult=ev=>{
+    const r=ev.results[ev.results.length-1];
+    liveText=r[0].transcript;const lt=$("livetext");if(lt)lt.textContent=liveText;
+    if(r.isFinal){finals=[];for(let i=0;i<r.length;i++)finals.push(r[i].transcript)}
+  };
+  rec.onerror=ev=>{
+    errored=true;listening=false;
+    if(ev.error==="not-allowed"||ev.error==="service-not-allowed"||ev.error==="audio-capture"){micBlocked=true;micMsg="The microphone isn't available here, so taps count your reps instead. To use the check, allow the microphone for this app in Settings, or open it in Safari."}
+    else if(ev.error==="no-speech"){micMsg="I didn't hear anything. Tap and try again."}
+    else if(ev.error!=="aborted"){micMsg="Speech recognition stopped ("+ev.error+"). Tap and try again."}
+    renderCard();
+  };
+  rec.onend=()=>{
+    if(errored)return;listening=false;
+    if(!finals&&liveText)finals=[liveText];
+    if(!finals){micMsg="I didn't hear anything. Tap and try again.";renderCard();return}
+    micMsg="";const g=grade(Q[qi].say,finals);repRes[reps]=g;countRep();
+  };
+  try{rec.start()}catch(e){listening=false;micMsg="Couldn't start the microphone. Tap and try again.";renderCard()}
+}
+let micMsg="";
+function countRep(){reps++;S.reps++;save();if(reps>=3)stage="rate";renderCard();const n=$("card").querySelector(".rep.next,[data-r]");n&&n.focus({preventScroll:true})}
 const KEY="qc-drill-v1";
 let S={p:{},reps:0,sessions:0,scale:1};
 try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s&&s.p)S=Object.assign(S,s)}catch(e){}
@@ -544,6 +646,7 @@ function renderHome(){
   document.querySelectorAll("#modes button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.mode===cfg.mode));
   document.querySelectorAll("#sizes button").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.size===cfg.size));
   renderStoryList();
+  if(SR){$("micblock").hidden=false;document.querySelectorAll("#mics button").forEach(b=>b.setAttribute("aria-pressed",(b.dataset.mic==="1")===(S.mic!==false)))}
   $("modehelp").textContent=cfg.mode==="shadow"
     ?"See the phrase, hear it, then say it three times. Best for phrases you haven't met yet."
     :"See the English, say the French from memory, then check. Best once a theme feels familiar.";
@@ -551,6 +654,7 @@ function renderHome(){
 $("groups").onclick=e=>{const b=e.target.closest("[data-g]");if(b){cfg.group=b.dataset.g;renderHome()}};
 $("modes").onclick=e=>{const b=e.target.closest("[data-mode]");if(b){cfg.mode=b.dataset.mode;renderHome()}};
 $("sizes").onclick=e=>{const b=e.target.closest("[data-size]");if(b){cfg.size=+b.dataset.size;renderHome()}};
+$("mics").onclick=e=>{const b=e.target.closest("[data-mic]");if(b){S.mic=b.dataset.mic==="1";micBlocked=false;save();renderHome()}};
 $("bigger").onclick=()=>{S.scale=S.scale>1?1:1.2;save();renderHome()};
 $("reset").onclick=()=>{$("resetconfirm").hidden=false};
 $("testaudio").onclick=()=>speak(P[21].say,1);
@@ -566,10 +670,10 @@ function pick(){
   return pool.slice(0,cfg.size).map(x=>x.p);
 }
 $("start").onclick=()=>{window.scrollTo(0,0);Q=pick();qi=0;results=[];$("home").hidden=true;$("done").hidden=true;$("drill").hidden=false;startCard()};
-function startCard(){stage=cfg.mode==="recall"?"recall":"reps";reps=0;renderCard();if(stage==="reps")speak(Q[qi].say,.9)}
+function startCard(){stage=cfg.mode==="recall"?"recall":"reps";reps=0;repRes=[];micMsg="";listening=false;renderCard();if(stage==="reps")speak(Q[qi].say,.9)}
 function renderCard(){
   const p=Q[qi],pct=qi/Q.length*100,showFr=stage!=="recall";
-  let h=`<div class="toolbar" style="justify-content:space-between"><span class="label">Phrase ${qi+1} of ${Q.length}</span><button class="small" id="quit">End session</button></div>
+  let h=`<div class="toolbar head" style="justify-content:space-between"><span class="label">Phrase ${qi+1} of ${Q.length}</span><button class="small" id="quit">End session</button></div>
   <div class="progress"><i style="width:${pct}%"></i></div>`;
   if(!showFr){
     h+=`<span class="label">Say this in Québécois</span><p class="prompt">“${esc(p.en)}”</p>
@@ -581,9 +685,21 @@ function renderCard(){
     <p class="meaning muted">${esc(p.en)}</p></div>
     <div class="toolbar"><button id="listen">Listen</button><button id="slow">Listen slowly</button></div><p class="note audionote" hidden></p>`;
     if(stage==="reps"){
-      h+=`<div class="reps"><span class="label">Now say it out loud · tap after each one</span>`+
-      REP_CUES.map((c,k)=>`<button class="rep ${k<reps?"done":k===reps?"next":""}" id="rep-${k}" data-rep="${k}" ${k!==reps?"disabled":""}><span class="dot">${k<reps?"✓":k+1}</span>${c}</button>`).join("")+`</div>`;
+      const mic=micOn();
+      h+=`<div class="reps"><span class="label">${mic?"Tap, then say it out loud":"Now say it out loud · tap after each one"}</span>`+
+      REP_CUES.map((c,k)=>{const g=repRes[k];const gn=g?gradeName(g.score):null;const isNext=k===reps;
+        const lab=isNext&&listening?"Listening… tap when you're done":isNext&&mic?c+" · tap to start":c;
+        return`<button class="rep ${k<reps?"done":isNext?"next":""} ${isNext&&listening?"listening":""}" id="rep-${k}" data-rep="${k}" ${!isNext?"disabled":""}><span class="dot">${k<reps?"✓":k+1}</span>${lab}${gn?`<span class="gtag" style="color:var(--${gn[1]==="g-ok"?"good":gn[1]==="g-mid"?"warn":"bad"})">${gn[0]}</span>`:""}</button>`}).join("")+`</div>`;
+      if(listening)h+=`<p class="heard" id="livetext" aria-live="polite">${esc(liveText)}</p>`;
+      const last=repRes[reps-1];
+      if(last&&!listening)h+=feedback(last);
+      if(micMsg)h+=`<p class="note">${esc(micMsg)}</p>`;
+      if(mic&&!listening)h+=`<button class="link skipmic" id="skipmic">Count this one without the mic</button>`;
     }else{
+      const last=repRes[2]||repRes[1]||repRes[0];
+      if(last)h+=feedback(last);
+      const okN=repRes.filter(g=>g&&g.score>=.85).length;
+      if(repRes.some(Boolean))h+=`<p class="heard">${okN} of 3 tries came through clearly.</p>`;
       h+=`<span class="label">How did that feel?</span><div class="rate">
       <button id="r-again" data-r="0">Again<small>show it soon</small></button>
       <button id="r-shaky" data-r="1">Shaky<small>getting there</small></button>
@@ -595,9 +711,20 @@ function renderCard(){
   if($("reveal"))$("reveal").onclick=()=>{stage="reps";renderCard();speak(p.say,.9)};
   if($("listen"))$("listen").onclick=()=>speak(p.say,.95);
   if($("slow"))$("slow").onclick=()=>speak(p.say,.6);
-  $("card").querySelectorAll("[data-rep]").forEach(b=>b.onclick=()=>{reps++;S.reps++;save();if(reps>=3)stage="rate";renderCard();const n=$("card").querySelector(".rep.next,[data-r]");n&&n.focus()});
+  $("card").querySelectorAll("[data-rep]").forEach(b=>b.onclick=()=>{if(micOn())startListening();else countRep()});
+  if($("skipmic"))$("skipmic").onclick=()=>{micMsg="";countRep()};
+  $("card").querySelectorAll("[data-word]").forEach(b=>b.onclick=()=>hearWord(b.dataset.word));
+  if($("fbslow"))$("fbslow").onclick=()=>speak(p.say,.6);
   $("card").querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>rate(+b.dataset.r));
   const f=$("card").querySelector("#reveal,.rep.next");f&&f.focus({preventScroll:true});
+}
+function feedback(g){
+  const gn=gradeName(g.score);
+  return`<div class="fb"><span class="grade ${gn[1]}">${gn[0]}</span>
+    <div class="words" lang="fr-CA">${g.words.map(x=>x.ok?`<span class="w-ok">${esc(x.w)}</span>`:`<button class="w-miss" data-word="${esc(x.w)}" aria-label="Hear ${esc(x.w)}">${esc(x.w)}</button>`).join("")}</div>
+    ${g.words.some(x=>!x.ok)?`<p class="heard">Tap a red word to hear it, then try again.</p>`:""}
+    <p class="heard">Heard: “${esc(g.heard)}”</p>
+    <button id="fbslow" class="small">Hear the whole phrase slowly</button></div>`;
 }
 function rate(r){
   const p=Q[qi],cur=S.p[p.i]||{l:0,n:0};
@@ -606,6 +733,7 @@ function rate(r){
   qi++;if(qi>=Q.length)finish();else startCard();
 }
 function finish(){
+  if(listening&&rec){try{rec.abort()}catch(e){}listening=false}
   if("speechSynthesis" in window)speechSynthesis.cancel();
   if(results.length)S.sessions++;save();
   $("drill").hidden=true;$("done").hidden=false;
@@ -631,7 +759,7 @@ $("storylist").onclick=e=>{const b=e.target.closest("[data-s]");if(b)openStory(+
 function openStory(k){si=k;showEN=false;openEN={};storyLine=-1;$("home").hidden=true;$("done").hidden=true;$("drill").hidden=true;$("story").hidden=false;renderStory();window.scrollTo(0,0)}
 function renderStory(){
   const s=STORIES[si];
-  let h=`<div class="toolbar" style="justify-content:space-between"><span class="label">Story ${si+1} of ${STORIES.length}</span><button class="small" id="storyback">Back</button></div>
+  let h=`<div class="toolbar head" style="justify-content:space-between"><span class="label">Story ${si+1} of ${STORIES.length}</span><button class="small" id="storyback">Back</button></div>
   <div><h2 lang="fr-CA">${esc(s.title)}</h2><p class="muted">${esc(s.en)}</p></div>
   <p class="note">Listen once without the English. Then play it again. Tap any line to hear it on its own.</p>
   <div class="toolbar"><button class="primary" id="playstory">${storyAll?"Stop":"Play story"}</button><button id="toggleen" aria-pressed="${showEN}">${showEN?"Hide English":"Show all English"}</button></div>
